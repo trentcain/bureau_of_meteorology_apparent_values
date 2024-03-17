@@ -224,3 +224,8 @@ class WeatherHourly(WeatherBase):
     def unique_id(self):
         """Return Unique ID string."""
         return self.location_name + "_hourly"
+
+    @property
+    def native_apparent_temperature(self):
+        """Return the apparent temperature in native units."""
+        return self.collector.observations_data["data"]["temp_feels_like"]
