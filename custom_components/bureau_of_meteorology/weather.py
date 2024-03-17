@@ -103,6 +103,7 @@ class WeatherBase(WeatherEntity):
                 wind_gust_speed=data["wind_gust_speed_kilometre"],
                 humidity=data["relative_humidity"],
                 uv=data["uv"],
+                native_apparent_temperature=data["temp_feels_like"],
             )
             for data in self.collector.hourly_forecasts_data["data"]
         ]
