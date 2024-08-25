@@ -1,10 +1,10 @@
 """Platform for sensor integration."""
 import logging
-from datetime import datetime, tzinfo
+from datetime import datetime, tzinfo, timezone
 from typing import Any
 
 import iso8601
-import pytz
+import zoneinfo
 import math #Required for calculated observations (e.g dew point)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.sensor import SensorDeviceClass
@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pytz import timezone
+from zoneinfo import ZoneInfo
 
 from . import BomDataUpdateCoordinator
 from .const import (
@@ -234,7 +234,7 @@ class ObservationSensor(SensorBase):
         """Return the state attributes of the sensor."""
         attr = {}
 
-        tzinfo = pytz.timezone(self.collector.locations_data["data"]["timezone"])
+        tzinfo = zoneinfo.ZoneInfo(self.collector.locations_data["data"]["timezone"])
         for key in self.collector.observations_data["metadata"]:
             try:
                 attr[key] = iso8601.parse_date(self.collector.observations_data["metadata"][key]).astimezone(tzinfo).isoformat()
@@ -298,7 +298,7 @@ class ForecastSensor(SensorBase):
 
         # If there is no data for this day, do not add attributes for this day.
         if self.day < len(self.collector.daily_forecasts_data["data"]):
-            tzinfo = pytz.timezone(self.collector.locations_data["data"]["timezone"])
+            tzinfo = zoneinfo.ZoneInfo(self.collector.locations_data["data"]["timezone"])
             for key in self.collector.daily_forecasts_data["metadata"]:
                 try:
                     attr[key] = iso8601.parse_date(self.collector.daily_forecasts_data["metadata"][key]).astimezone(tzinfo).isoformat()
@@ -320,7 +320,7 @@ class ForecastSensor(SensorBase):
         # If there is no data for this day, return state as 'None'.
         if self.day < len(self.collector.daily_forecasts_data["data"]):
             if self.device_class == SensorDeviceClass.TIMESTAMP:
-                tzinfo = pytz.timezone(
+                tzinfo = zoneinfo.ZoneInfo(
                     self.collector.locations_data["data"]["timezone"]
                 )
                 try:
@@ -337,10 +337,10 @@ class ForecastSensor(SensorBase):
                         f'[{self.collector.daily_forecasts_data["data"][self.day]["uv_category"].replace("veryhigh", "very high").title()}]'
                     )
                 else:
-                    utc = pytz.utc
-                    local = timezone(self.collector.locations_data["data"]["timezone"])
-                    start_time = utc.localize(datetime.strptime(self.collector.daily_forecasts_data["data"][self.day]["uv_start_time"], "%Y-%m-%dT%H:%M:%SZ")).astimezone(local)
-                    end_time = utc.localize(datetime.strptime(self.collector.daily_forecasts_data["data"][self.day]["uv_end_time"], "%Y-%m-%dT%H:%M:%SZ")).astimezone(local)
+                    utc = timezone.utc
+                    local = zoneinfo.ZoneInfo(self.collector.locations_data["data"]["timezone"])
+                    start_time = datetime.strptime(self.collector.daily_forecasts_data["data"][self.day]["uv_start_time"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=utc).astimezone(local)
+                    end_time = datetime.strptime(self.collector.daily_forecasts_data["data"][self.day]["uv_end_time"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=utc).astimezone(local)
                     return (
                         f'Sun protection recommended from {start_time.strftime("%-I:%M%p").lower()} to '
                         f'{end_time.strftime("%-I:%M%p").lower()}, UV Index predicted to reach '
