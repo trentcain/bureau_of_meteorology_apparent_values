@@ -85,7 +85,6 @@ class WeatherBase(WeatherEntity):
                 templow=data["temp_min"],
                 native_precipitation=data["rain_amount_max"],
                 precipitation_probability=data["rain_chance"],
-                native_apparent_temperature=data["temp_feels_like"],
             )
             for data in self.collector.daily_forecasts_data["data"]
         ]
