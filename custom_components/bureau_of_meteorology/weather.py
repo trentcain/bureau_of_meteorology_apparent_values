@@ -85,6 +85,7 @@ class WeatherBase(WeatherEntity):
                 templow=data["temp_min"],
                 native_precipitation=data["rain_amount_max"],
                 precipitation_probability=data["rain_chance"],
+                native_apparent_temperature=data["temp_feels_like"],
             )
             for data in self.collector.daily_forecasts_data["data"]
         ]
@@ -103,6 +104,7 @@ class WeatherBase(WeatherEntity):
                 wind_gust_speed=data["wind_gust_speed_kilometre"],
                 humidity=data["relative_humidity"],
                 uv_index=data["uv"],
+                native_apparent_temperature=data["temp_feels_like"],
             )
             for data in self.collector.hourly_forecasts_data["data"]
         ]
@@ -168,6 +170,11 @@ class WeatherBase(WeatherEntity):
         return MAP_CONDITION[
             self.collector.daily_forecasts_data["data"][0]["icon_descriptor"]
         ]
+
+    @property
+    def native_apparent_temperature(self):
+        """Return the apparent temperature in native units."""
+        return self.collector.observations_data["data"]["temp_feels_like"]
 
     async def async_update(self):
         await self.coordinator.async_update()
